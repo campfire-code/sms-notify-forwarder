@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 允许明文 HTTP：自定义 Webhook 可能指向局域网或本机服务。企业微信、钉钉、飞书的官方地址都是 HTTPS。 -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
