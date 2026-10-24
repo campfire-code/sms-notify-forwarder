@@ -4,10 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -36,13 +37,13 @@ fun AppRoot(vm: MainViewModel, perm: PermissionState, actions: PermissionActions
     val tabs = listOf(
         Tab("首页", Icons.Default.Home),
         Tab("通道", Icons.Default.Send),
-        Tab("规则", Icons.Default.Settings),
-        Tab("日志", Icons.Default.Info),
+        Tab("规则", Icons.AutoMirrored.Filled.List),
+        Tab("日志", Icons.Default.Notifications),
     )
     var index by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 tabs.forEachIndexed { i, t ->
                     NavigationBarItem(
                         selected = index == i,
@@ -56,7 +57,7 @@ fun AppRoot(vm: MainViewModel, perm: PermissionState, actions: PermissionActions
     ) { pad ->
         Box(Modifier.padding(pad)) {
             when (index) {
-                0 -> HomeScreen(vm, perm, actions)
+                0 -> HomeScreen(vm, perm, actions) { index = 1 }
                 1 -> ChannelsScreen(vm)
                 2 -> RulesScreen(vm)
                 else -> LogsScreen(vm)

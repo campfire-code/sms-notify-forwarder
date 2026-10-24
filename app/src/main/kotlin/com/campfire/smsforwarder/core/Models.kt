@@ -2,7 +2,7 @@ package com.campfire.smsforwarder.core
 
 import kotlinx.serialization.Serializable
 
-/** 来源：短信或应用通知（自定义 Webhook 的 source 字段取值就是 wire）。 */
+/** 来源：短信或应用通知（自定义回调地址的 source 字段取值就是 wire）。 */
 enum class Source(val wire: String, val label: String) {
     SMS("sms", "短信"),
     NOTIFICATION("notification", "通知"),
@@ -22,7 +22,7 @@ enum class ChannelType(val label: String) {
     WECOM("企业微信群机器人"),
     DINGTALK("钉钉自定义机器人"),
     FEISHU("飞书自定义机器人"),
-    CUSTOM("自定义 Webhook"),
+    CUSTOM("自定义回调地址"),
 }
 
 @Serializable

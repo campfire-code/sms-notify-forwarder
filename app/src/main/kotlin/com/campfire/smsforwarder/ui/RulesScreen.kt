@@ -12,7 +12,22 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
@@ -52,39 +67,76 @@ fun RulesScreen(vm: MainViewModel) {
         return
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("转发规则", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Card {
-            Row(Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    val active = s.rules.filter { it.enabled && RuleMatcher.isEffective(it) }
+    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        PageHeader("转发规则", "决定哪些短信、哪些应用的通知会被转发")
+
+        // 当前效果一句话说清
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.primaryContainer).padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(
+                if (active.isEmpty()) "现在没有生效的短信规则，收到的所有短信都会转发。"
+                else "现在有 ${active.size} 条规则生效，短信命中任意一条才会转发。",
+                color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+
+        Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconBadge(Icons.Default.Notifications, MaterialTheme.colorScheme.onPrimaryContainer, MaterialTheme.colorScheme.primaryContainer, 44)
+                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text("转发通知的应用", fontWeight = FontWeight.SemiBold)
-                    Text("已勾选 ${s.notifyApps.size} 个。需先开启通知使用权。", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        if (s.notifyApps.isEmpty()) "还没有勾选应用。需先开启通知使用权。" else "已勾选 ${s.notifyApps.size} 个。需先开启通知使用权。",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
-                OutlinedButton(onClick = { showApps = true }) { Text("选择应用") }
+                OutlinedButton(onClick = { showApps = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text("选择应用") }
             }
         }
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("短信规则", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "没有规则时转发全部短信；有规则时命中任意一条才转发。一条规则里填了几项，就要同时满足几项。",
-                    style = MaterialTheme.typography.bodySmall,
+                    "一条规则里填了几项，就要同时满足几项。",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Button(onClick = { editing = Rule(UUID.randomUUID().toString()) }) { Text("添加") }
+            Button(onClick = { editing = Rule(UUID.randomUUID().toString()) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                Icon(Icons.Default.Add, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("添加")
+            }
+        }
+        if (s.rules.isEmpty()) {
+            EmptyHint(
+                Icons.AutoMirrored.Filled.List, "还没有短信规则",
+                "不添加规则就转发全部短信。想只转发验证码或订单通知，可以按发件号码、关键词或正则筛选。",
+            )
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(s.rules, key = { it.id }) { r ->
-                Card {
-                    Row(Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            if (r.senderContains.isNotBlank()) Text("发件号码包含：${r.senderContains}")
-                            if (r.keywordContains.isNotBlank()) Text("内容包含：${r.keywordContains}")
-                            if (r.regex.isNotBlank()) Text("正则：${r.regex}")
-                            if (!RuleMatcher.isEffective(r)) Text("（空规则，不生效）", style = MaterialTheme.typography.bodySmall)
+                Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+                    Row(Modifier.padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 4.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (r.senderContains.isNotBlank()) Condition("发件号码包含", r.senderContains)
+                            if (r.keywordContains.isNotBlank()) Condition("内容包含", r.keywordContains)
+                            if (r.regex.isNotBlank()) Condition("正则", r.regex)
+                            if (!RuleMatcher.isEffective(r)) {
+                                Text("（空规则，不生效）", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             Row {
-                                TextButton(onClick = { editing = r }) { Text("编辑") }
-                                TextButton(onClick = { vm.deleteRule(r.id) }) { Text("删除") }
+                                TextButton(onClick = { editing = r }, modifier = Modifier.heightIn(min = 48.dp)) { Text("编辑") }
+                                TextButton(
+                                    onClick = { vm.deleteRule(r.id) }, modifier = Modifier.heightIn(min = 48.dp),
+                                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                                ) { Text("删除") }
                             }
                         }
                         Switch(checked = r.enabled, onCheckedChange = { vm.saveRule(r.copy(enabled = it)) })
@@ -127,6 +179,15 @@ private fun RuleDialog(rule: Rule, onDismiss: () -> Unit, onSave: (Rule) -> Unit
     )
 }
 
+@Composable
+private fun Condition(label: String, value: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Pill(label, MaterialTheme.colorScheme.onSecondaryContainer, MaterialTheme.colorScheme.secondaryContainer)
+        Spacer(Modifier.width(8.dp))
+        Text(value, fontWeight = FontWeight.SemiBold)
+    }
+}
+
 private data class AppItem(val pkg: String, val label: String)
 
 @Composable
@@ -155,7 +216,7 @@ private fun AppPicker(selected: Set<String>, onChange: (Set<String>) -> Unit, on
         if (list == null) Text("正在加载应用列表…")
         else LazyColumn {
             items(list.filter { query.isBlank() || it.label.contains(query, true) || it.pkg.contains(query, true) }, key = { it.pkg }) { a ->
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = a.pkg in selected, onCheckedChange = { on ->
                         onChange(if (on) selected + a.pkg else selected - a.pkg)
                     })
