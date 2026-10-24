@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit
 
 /** 转发入口：短信 / 通知到达后调用，为每个启用的通道各排一个带重试的任务。 */
 object Forwarder {
-    const val MAX_ATTEMPTS = 3
+    // 首次发送 + 3 次重试
+    const val MAX_ATTEMPTS = 4
     private const val MAX_CONTENT = 4000 // WorkManager 输入数据上限约 10KB
 
     suspend fun onMessage(context: Context, msg: ForwardMessage) {
