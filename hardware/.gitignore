@@ -1,0 +1,5 @@
+config.json
+config.lua
+data/
+__pycache__/
+*.log

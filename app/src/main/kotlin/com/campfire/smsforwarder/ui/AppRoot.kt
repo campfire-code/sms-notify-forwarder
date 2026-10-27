@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -41,6 +42,11 @@ fun AppRoot(vm: MainViewModel, perm: PermissionState, actions: PermissionActions
         Tab("日志", Icons.Default.Notifications),
     )
     var index by rememberSaveable { mutableIntStateOf(0) }
+    var showHardware by rememberSaveable { mutableStateOf(false) }
+    if (showHardware) {
+        HardwareScreen(onBack = { showHardware = false })
+        return
+    }
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
@@ -57,7 +63,7 @@ fun AppRoot(vm: MainViewModel, perm: PermissionState, actions: PermissionActions
     ) { pad ->
         Box(Modifier.padding(pad)) {
             when (index) {
-                0 -> HomeScreen(vm, perm, actions) { index = 1 }
+                0 -> HomeScreen(vm, perm, actions, onGoChannels = { index = 1 }, onOpenHardware = { showHardware = true })
                 1 -> ChannelsScreen(vm)
                 2 -> RulesScreen(vm)
                 else -> LogsScreen(vm)

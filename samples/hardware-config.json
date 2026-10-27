@@ -1,0 +1,7 @@
+{
+  "channels": [
+    { "id": "1", "type": "CUSTOM", "name": "本机接收服务（示例）", "enabled": true, "url": "http://127.0.0.1:8765/hook", "secret": "" }
+  ],
+  "rules": [],
+  "serial": { "port": "", "portGlob": "/dev/cu.usbserial-*", "baud": 115200 }
+}

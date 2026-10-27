@@ -8,6 +8,7 @@
 <img src="docs/screenshot.png" width="240" alt="首页" />
 <img src="docs/screen-通道.png" width="240" alt="通道页" />
 <img src="docs/screen-日志.png" width="240" alt="日志页" />
+<img src="docs/screen-硬件方案.png" width="240" alt="硬件方案页" />
 </p>
 
 > 截图为模拟器里的示例数据，号码和账号都是虚构的。
@@ -23,7 +24,17 @@
 - 转发日志：最近 200 条，显示时间、来源、通道、结果。日志和界面里的验证码（4～8 位连续数字）一律打码；机器人地址和密钥只显示前后几位。
 - 常驻与开机自启：首页显示各项权限状态并可一键跳转系统设置；可选前台服务常驻；开机后自动恢复。
 
+硬件方案见 [hardware/README.md](hardware/README.md)。
+
 不做：远程控制、来电转发、短信回复、云端同步、统计上报。
+
+## 更新内容
+
+- 0.3.0：新增「硬件方案」，用插 SIM 卡的硬件（USB 串口短信接收器，或 Air780EPM 4G 模组）收短信并转发，不依赖手机常驻。说明见 [hardware/README.md](hardware/README.md)，应用首页也有入口。完整列表见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 什么时候用手机，什么时候用硬件
+
+手机一直在身边、能保持联网就用手机应用，最省事，还能转发 App 通知。手机后台常被系统清理而漏转、想用专用 SIM 卡收验证码、需要无人值守时，用硬件方案（只收短信）。同一张卡不要同时让手机和硬件转发，否则会收到两遍。
 
 ## 下载安装
 
@@ -118,6 +129,21 @@ adb emu sms send 106900 "【示例商城】您的验证码是582913，5分钟内
 
 更多示例短信见 `samples/sms-examples.txt`。
 
+### 硬件方案验收用例
+
+不需要硬件、也不需要手机。先在仓库根目录起接收服务 `python3 samples/receiver.py 8765`，再执行：
+
+```bash
+python3 hardware/receiver/sms_receiver.py --config samples/hardware-config.json --home /tmp/hw-demo --replay samples/hardware-frames.txt
+```
+
+1. 预期：接收服务依次收到 4 条 JSON（示例商城验证码短信、快递 ORDER-1、银行动态码 246810、`TEST1234`），`source` 均为 `sms`；命令行日志里验证码显示为 `******`。
+2. 同样的命令再执行一次：4 行「重复帧已忽略」，接收服务没有新请求。
+3. `cd hardware/receiver && python3 -m unittest discover -s tests`：全部通过（装了 lupa 时多跑固件逻辑测试）。
+4. 应用内：打开首页，点「硬件方案」，能看到使用场景对比、两种硬件和步骤概要；点返回键回到首页。
+
+需要真实硬件的用例（USB 接收器、Air780EPM 收发）见 [hardware/README.md](hardware/README.md) 的第 6、7 条，本版本**未在真实硬件上执行**。
+
 ## 已知限制
 
 - 只转发普通短信（`SMS_RECEIVED` 广播）。彩信、运营商的 RCS 富媒体消息不一定走这个广播，按安卓机制推断可能转发不到，未实测。
@@ -125,6 +151,7 @@ adb emu sms send 106900 "【示例商城】您的验证码是582913，5分钟内
 - 通知转发依赖系统的通知使用权，且只能读到应用发出的通知文字；应用不发文字、只发图片的通知会被忽略。同一应用 10 秒内完全相同的通知只转一次。
 - 重试靠 WorkManager 调度，间隔受系统省电策略影响，可能比 10 秒更晚。
 - 短信时间使用手机收到的时间，而不是运营商短信里的时间戳（模拟器里后者会偏一个小时，真机未对比）。
+- 硬件方案：USB 接收器的具体型号输出格式、Air780EPM 的接线与刷机操作、模组时钟校准，均未在真机上验证，详见 [hardware/README.md](hardware/README.md) 中标「未核实」的条目。
 - 钉钉签名未逐字对照官方原文，见上文「核实过的官方文档」。
 - 企业微信、钉钉、飞书的真实账号联调列入待联调清单：本机只用本地服务验证过自定义回调地址，三个机器人的请求格式靠单元测试和官方文档保证。
 
@@ -136,10 +163,12 @@ adb emu sms send 106900 "【示例商城】您的验证码是582913，5分钟内
 ./gradlew testDebugUnitTest   # 单元测试
 ./gradlew assembleDebug       # 调试包：app/build/outputs/apk/debug/
 ./gradlew lint
+
+cd hardware/receiver && python3 -m unittest discover -s tests   # 硬件方案的 Python 测试
 ```
 
-release 包的签名从环境变量读取：`ANDROID_KEYSTORE_FILE`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`。没有这些变量时 release 不签名。仓库里没有任何密钥文件。打 `v0.1.0` 这样的标签会触发 GitHub Actions 出包。
+release 包的签名从环境变量读取：`ANDROID_KEYSTORE_FILE`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`。没有这些变量时 release 不签名。仓库里没有任何密钥文件。打 `v0.3.0` 这样的标签会触发 GitHub Actions 出包。
 
 ## 许可证
 
-MIT，见 [LICENSE](LICENSE)。第三方依赖见 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)。本工具从零自研，没有参考或复制其他同类项目的源码、资源或界面文案。
+MIT，见 [LICENSE](LICENSE)。第三方依赖见 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)。本工具由篝火自研。

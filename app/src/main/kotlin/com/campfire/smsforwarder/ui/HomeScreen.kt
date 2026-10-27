@@ -66,7 +66,7 @@ private val PausedBottom = Color(0xFF45524B)
 private val PausedSoft = Color(0xFFE1E9E4)
 
 @Composable
-fun HomeScreen(vm: MainViewModel, perm: PermissionState, a: PermissionActions, onGoChannels: () -> Unit) {
+fun HomeScreen(vm: MainViewModel, perm: PermissionState, a: PermissionActions, onGoChannels: () -> Unit, onOpenHardware: () -> Unit) {
     val s by vm.settings.collectAsState()
     val logs by vm.logs.collectAsState()
 
@@ -205,6 +205,22 @@ fun HomeScreen(vm: MainViewModel, perm: PermissionState, a: PermissionActions, o
                     )
                 }
                 Switch(checked = s.keepAlive, onCheckedChange = { vm.setKeepAlive(it) })
+            }
+        }
+
+        Surface(
+            onClick = onOpenHardware,
+            shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainer,
+        ) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("硬件方案", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "手机老被系统清后台？用插 SIM 卡的硬件收短信。",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 

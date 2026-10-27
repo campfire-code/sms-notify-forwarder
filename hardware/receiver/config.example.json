@@ -1,0 +1,27 @@
+{
+  "说明": "复制为 config.json 后修改。channels 和 rules 的写法与安卓应用里的通道、规则一致；type 可填 WECOM、DINGTALK、FEISHU、CUSTOM。url 请填你自己的机器人地址或回调地址，secret 只有钉钉加签、飞书签名校验才需要。",
+  "channels": [
+    {
+      "id": "1",
+      "type": "WECOM",
+      "name": "企业微信群",
+      "enabled": true,
+      "url": "",
+      "secret": ""
+    }
+  ],
+  "rules": [
+    {
+      "id": "1",
+      "enabled": false,
+      "senderContains": "",
+      "keywordContains": "验证码",
+      "regex": ""
+    }
+  ],
+  "serial": {
+    "port": "",
+    "portGlob": "/dev/cu.usbserial-*",
+    "baud": 115200
+  }
+}
